@@ -11,8 +11,8 @@ PIPE_SCROLL_VELOCITY = 0.5
 PIPE_SPAWN_FREQUENCY = 0.5
 PIPE_WIDTH = 100
 BIRD_SIZE = 50
-BIRD_GRAVITY = 0.05
-BIRD_BOOST = 20
+BIRD_GRAVITY = 0.005
+BIRD_BOOST = 1.25
 
 # Needed for graphical environment
 WINDOW_TITLE = "Pyflap"
@@ -26,6 +26,7 @@ BIRD_IMAGES = [
     for file in ASSETS.glob("bird/*.png")
 ]
 
+PIPE = pygame.image.load(ASSETS.joinpath("pipe.png"))
 
 class State:
     def __init__(self):
@@ -59,7 +60,7 @@ class State:
                 self.bird_frame = (self.bird_frame + 1) % len(BIRD_IMAGES)
 
         self.bird_velocity += BIRD_GRAVITY * dt
-        self.bird.move_ip(0, self.bird_velocity)
+        self.bird.move_ip(0, self.bird_velocity * dt)
         if self.bird.bottom > HEIGHT:
             self.bird.bottom = HEIGHT
         if self.bird.top < 0:
@@ -95,15 +96,18 @@ class Game:
 
     def update(self) -> None:
         self.state.update(self.dt)
-        self.dt = self.clock.tick(60)
+        self.dt = self.clock.tick(144)
 
     def render(self) -> None:
         self.screen.fill("lightblue")
 
         self.screen.blit(BIRD_IMAGES[self.state.bird_frame], self.state.bird)
 
-        for pipe in self.state.pipes:
-            pygame.draw.rect(surface=self.screen, color="darkgreen", rect=pipe)
+        for i, pipe in enumerate(self.state.pipes):
+            image = pygame.transform.scale(PIPE, (pipe.width, pipe.height))
+            image = image if i % 2 == 0 else pygame.transform.flip(image, False, True)
+            self.screen.blit(image, pipe)
+            #pygame.draw.rect(surface=self.screen, color="darkgreen", rect=pipe)
 
         score = self.font.render(f"Score: {self.state.score}", True, "black")
         best_score = self.font.render(
